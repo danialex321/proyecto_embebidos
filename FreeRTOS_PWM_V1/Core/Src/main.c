@@ -288,13 +288,13 @@ void Start_PWM_Fade(void *argument)
 	  	  osDelay(1);
 	  	}*/
 	  	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1, 65535);
-	  	  osDelay(50);
+	  	  osDelay(1000);
 	  	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1, 50000);
-	  	  osDelay(50);
+	  	  osDelay(1000);
 	  	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1, 25000);
-	  	  osDelay(50);
+	  	  osDelay(1000);
 	  	  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1, 0);
-	  	  osDelay(50);
+	  	  osDelay(1000);
 
 
 	      osDelay(1);
