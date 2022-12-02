@@ -1,7 +1,7 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.c
+  * @file           : main.c for freeRTOS final assignment
   * @brief          : Main program body
   ******************************************************************************
   * @attention
