@@ -386,7 +386,7 @@ void BrakeInput(void *argument)
   for(;;)
   {
 	  Lcd_cursor(&lcd, 0,1);
-	  Lcd_string(&lcd, "Testing 3 LCD");
+	  Lcd_string(&lcd, "Testing 4 LCD");
 	  osDelay(1);
   }
   /* USER CODE END 5 */

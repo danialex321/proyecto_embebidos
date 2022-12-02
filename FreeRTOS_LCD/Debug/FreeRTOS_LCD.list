@@ -1085,7 +1085,7 @@ void BrakeInput(void *argument)
  8000756:	2100      	movs	r1, #0
  8000758:	4618      	mov	r0, r3
  800075a:	f7ff fd75 	bl	8000248 <Lcd_cursor>
-	  Lcd_string(&lcd, "Testing 3 LCD");
+	  Lcd_string(&lcd, "Testing 4 LCD");
  800075e:	f107 0320 	add.w	r3, r7, #32
  8000762:	4907      	ldr	r1, [pc, #28]	; (8000780 <BrakeInput+0x84>)
  8000764:	4618      	mov	r0, r3
