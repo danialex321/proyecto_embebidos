@@ -117,7 +117,7 @@ void DisplayInput(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint16_t readValue;
 /* USER CODE END 0 */
 
 /**
@@ -150,6 +150,8 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_ADC_Start(&hadc1);
+
 
   // Lcd_PortType ports[] = { D4_GPIO_Port, D5_GPIO_Port, D6_GPIO_Port, D7_GPIO_Port };
     Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
@@ -385,8 +387,13 @@ void BrakeInput(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  Lcd_cursor(&lcd, 0,1);
+	  HAL_ADC_PollForConversion(&hadc1,1000);
+	  readValue = HAL_ADC_GetValue(&hadc1);
+	  Lcd_cursor(&lcd, 0,0);
 	  Lcd_string(&lcd, "Testing 3 LCD");
+	  Lcd_cursor(&lcd, 1,0);
+	  Lcd_int(&lcd, readValue);
+	  Lcd_clear(&lcd);
 	  osDelay(1);
   }
   /* USER CODE END 5 */
@@ -401,12 +408,11 @@ void BrakeInput(void *argument)
 /* USER CODE END Header_ThrottleInput */
 void ThrottleInput(void *argument)
 {
-  /* USER CODE BEGIN ThrottleInput */
 
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
   }
   /* USER CODE END ThrottleInput */
 }
@@ -457,6 +463,14 @@ void DataInput(void *argument)
 void DisplayInput(void *argument)
 {
   /* USER CODE BEGIN DisplayInput */
+	/* USER CODE BEGIN ThrottleInput */
+		// Lcd_PortType ports[] = { D4_GPIO_Port, D5_GPIO_Port, D6_GPIO_Port, D7_GPIO_Port };
+			Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+			// Lcd_PinType pins[] = {D4_Pin, D5_Pin, D6_Pin, D7_Pin};
+			Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+			Lcd_HandleTypeDef lcd;
+			// Lcd_create(ports, pins, RS_GPIO_Port, RS_Pin, EN_GPIO_Port, EN_Pin, LCD_4_BIT_MODE);
+			lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
   /* Infinite loop */
   for(;;)
   {
