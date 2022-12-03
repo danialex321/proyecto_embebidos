@@ -27,23 +27,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000029  00000000  00000000  00020078  2**0
                   CONTENTS, READONLY
- 12 .debug_info   00014dfb  00000000  00000000  000200a1  2**0
+ 12 .debug_info   00014df2  00000000  00000000  000200a1  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 00003178  00000000  00000000  00034e9c  2**0
+ 13 .debug_abbrev 000031bf  00000000  00000000  00034e93  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000012c0  00000000  00000000  00038018  2**3
+ 14 .debug_aranges 000012c0  00000000  00000000  00038058  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_ranges 00001158  00000000  00000000  000392d8  2**3
+ 15 .debug_ranges 00001158  00000000  00000000  00039318  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  00003d9b  00000000  00000000  0003a430  2**0
+ 16 .debug_macro  00003d9b  00000000  00000000  0003a470  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00014639  00000000  00000000  0003e1cb  2**0
+ 17 .debug_line   00014629  00000000  00000000  0003e20b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000972f4  00000000  00000000  00052804  2**0
+ 18 .debug_str    000972f4  00000000  00000000  00052834  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000e9af8  2**0
+ 19 .comment      00000050  00000000  00000000  000e9b28  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000051a0  00000000  00000000  000e9b48  2**2
+ 20 .debug_frame  000051a0  00000000  00000000  000e9b78  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -520,33 +520,18 @@ void lcd_write(Lcd_HandleTypeDef * lcd, uint8_t data, uint8_t len)
  80003e2:	bd80      	pop	{r7, pc}
 
 080003e4 <main>:
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
+int AverageSpeed = 0;
+int AverageSpeedTotal = 0;
+int finalSpeed = 0;
+
 int main(void)
 {
  80003e4:	b580      	push	{r7, lr}
  80003e6:	af00      	add	r7, sp, #0
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
  80003e8:	f000 ffb0 	bl	800134c <HAL_Init>
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
  80003ec:	f000 f894 	bl	8000518 <SystemClock_Config>
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
  80003f0:	f000 f9e0 	bl	80007b4 <MX_GPIO_Init>
   MX_ADC1_Init();
@@ -555,7 +540,8 @@ int main(void)
  80003f8:	f000 f928 	bl	800064c <MX_ADC2_Init>
   MX_TIM2_Init();
  80003fc:	f000 f964 	bl	80006c8 <MX_TIM2_Init>
-  /* USER CODE BEGIN 2 */
+
+  // Initializing ADC and PWM channel
   HAL_ADC_Start(&hadc1);
  8000400:	482b      	ldr	r0, [pc, #172]	; (80004b0 <main+0xcc>)
  8000402:	f001 f8d1 	bl	80015a8 <HAL_ADC_Start>
@@ -567,13 +553,8 @@ int main(void)
  800040e:	482a      	ldr	r0, [pc, #168]	; (80004b8 <main+0xd4>)
  8000410:	f002 fd58 	bl	8002ec4 <HAL_TIM_PWM_Start>
 
-  /* USER CODE END 2 */
-
-  /* Init scheduler */
   osKernelInitialize();
  8000414:	f003 fbba 	bl	8003b8c <osKernelInitialize>
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
   /* creation of ThrottleQueue */
@@ -585,7 +566,6 @@ int main(void)
  8000422:	4603      	mov	r3, r0
  8000424:	4a26      	ldr	r2, [pc, #152]	; (80004c0 <main+0xdc>)
  8000426:	6013      	str	r3, [r2, #0]
-
   /* creation of BrakeQueue */
   BrakeQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &BrakeQueue_attributes);
  8000428:	4a26      	ldr	r2, [pc, #152]	; (80004c4 <main+0xe0>)
@@ -595,7 +575,6 @@ int main(void)
  8000432:	4603      	mov	r3, r0
  8000434:	4a24      	ldr	r2, [pc, #144]	; (80004c8 <main+0xe4>)
  8000436:	6013      	str	r3, [r2, #0]
-
   /* creation of GearQueue */
   GearQueueHandle = osMessageQueueNew (16, sizeof(char), &GearQueue_attributes);
  8000438:	4a24      	ldr	r2, [pc, #144]	; (80004cc <main+0xe8>)
@@ -605,7 +584,6 @@ int main(void)
  8000442:	4603      	mov	r3, r0
  8000444:	4a22      	ldr	r2, [pc, #136]	; (80004d0 <main+0xec>)
  8000446:	6013      	str	r3, [r2, #0]
-
   /* creation of SpeedQueue */
   SpeedQueueHandle = osMessageQueueNew (16, sizeof(uint32_t), &SpeedQueue_attributes);
  8000448:	4a22      	ldr	r2, [pc, #136]	; (80004d4 <main+0xf0>)
@@ -615,9 +593,6 @@ int main(void)
  8000452:	4603      	mov	r3, r0
  8000454:	4a20      	ldr	r2, [pc, #128]	; (80004d8 <main+0xf4>)
  8000456:	6013      	str	r3, [r2, #0]
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
   /* Create the thread(s) */
   /* creation of Throttle */
   ThrottleHandle = osThreadNew(ThrottleInput, NULL, &Throttle_attributes);
@@ -628,7 +603,6 @@ int main(void)
  8000462:	4603      	mov	r3, r0
  8000464:	4a1f      	ldr	r2, [pc, #124]	; (80004e4 <main+0x100>)
  8000466:	6013      	str	r3, [r2, #0]
-
   /* creation of Brake */
   BrakeHandle = osThreadNew(BrakeInput, NULL, &Brake_attributes);
  8000468:	4a1f      	ldr	r2, [pc, #124]	; (80004e8 <main+0x104>)
@@ -638,7 +612,6 @@ int main(void)
  8000472:	4603      	mov	r3, r0
  8000474:	4a1e      	ldr	r2, [pc, #120]	; (80004f0 <main+0x10c>)
  8000476:	6013      	str	r3, [r2, #0]
-
   /* creation of Gear */
   GearHandle = osThreadNew(GearSelection, NULL, &Gear_attributes);
  8000478:	4a1e      	ldr	r2, [pc, #120]	; (80004f4 <main+0x110>)
@@ -648,7 +621,6 @@ int main(void)
  8000482:	4603      	mov	r3, r0
  8000484:	4a1d      	ldr	r2, [pc, #116]	; (80004fc <main+0x118>)
  8000486:	6013      	str	r3, [r2, #0]
-
   /* creation of Data */
   DataHandle = osThreadNew(DataProcessing, NULL, &Data_attributes);
  8000488:	4a1d      	ldr	r2, [pc, #116]	; (8000500 <main+0x11c>)
@@ -658,7 +630,6 @@ int main(void)
  8000492:	4603      	mov	r3, r0
  8000494:	4a1c      	ldr	r2, [pc, #112]	; (8000508 <main+0x124>)
  8000496:	6013      	str	r3, [r2, #0]
-
   /* creation of Display */
   DisplayHandle = osThreadNew(OutputDisplay, NULL, &Display_attributes);
  8000498:	4a1c      	ldr	r2, [pc, #112]	; (800050c <main+0x128>)
@@ -668,17 +639,9 @@ int main(void)
  80004a2:	4603      	mov	r3, r0
  80004a4:	4a1b      	ldr	r2, [pc, #108]	; (8000514 <main+0x130>)
  80004a6:	6013      	str	r3, [r2, #0]
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
   /* Start scheduler */
   osKernelStart();
  80004a8:	f003 fba2 	bl	8003bf0 <osKernelStart>
-
-  /* We should never get here as control is now taken by the scheduler */
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
  80004ac:	e7fe      	b.n	80004ac <main+0xc8>
  80004ae:	bf00      	nop
@@ -710,10 +673,10 @@ int main(void)
  8000514:	2000014c 	.word	0x2000014c
 
 08000518 <SystemClock_Config>:
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+  {
+  }
+}
+
 void SystemClock_Config(void)
 {
  8000518:	b580      	push	{r7, lr}
@@ -842,20 +805,12 @@ static void MX_ADC1_Init(void)
  80005d0:	b580      	push	{r7, lr}
  80005d2:	b084      	sub	sp, #16
  80005d4:	af00      	add	r7, sp, #0
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
   ADC_ChannelConfTypeDef sConfig = {0};
  80005d6:	1d3b      	adds	r3, r7, #4
  80005d8:	2200      	movs	r2, #0
  80005da:	601a      	str	r2, [r3, #0]
  80005dc:	605a      	str	r2, [r3, #4]
  80005de:	609a      	str	r2, [r3, #8]
-
-  /* USER CODE END ADC1_Init 1 */
-
   /** Common config
   */
   hadc1.Instance = ADC1;
@@ -920,10 +875,6 @@ static void MX_ADC1_Init(void)
     Error_Handler();
  8000638:	f000 fca4 	bl	8000f84 <Error_Handler>
   }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
  800063c:	bf00      	nop
  800063e:	3710      	adds	r7, #16
@@ -942,20 +893,12 @@ static void MX_ADC2_Init(void)
  800064c:	b580      	push	{r7, lr}
  800064e:	b084      	sub	sp, #16
  8000650:	af00      	add	r7, sp, #0
-
-  /* USER CODE BEGIN ADC2_Init 0 */
-
-  /* USER CODE END ADC2_Init 0 */
-
   ADC_ChannelConfTypeDef sConfig = {0};
  8000652:	1d3b      	adds	r3, r7, #4
  8000654:	2200      	movs	r2, #0
  8000656:	601a      	str	r2, [r3, #0]
  8000658:	605a      	str	r2, [r3, #4]
  800065a:	609a      	str	r2, [r3, #8]
-
-  /* USER CODE END ADC2_Init 1 */
-
   /** Common config
   */
   hadc2.Instance = ADC2;
@@ -1020,10 +963,6 @@ static void MX_ADC2_Init(void)
     Error_Handler();
  80006b4:	f000 fc66 	bl	8000f84 <Error_Handler>
   }
-  /* USER CODE BEGIN ADC2_Init 2 */
-
-  /* USER CODE END ADC2_Init 2 */
-
 }
  80006b8:	bf00      	nop
  80006ba:	3710      	adds	r7, #16
@@ -1042,11 +981,6 @@ static void MX_TIM2_Init(void)
  80006c8:	b580      	push	{r7, lr}
  80006ca:	b08e      	sub	sp, #56	; 0x38
  80006cc:	af00      	add	r7, sp, #0
-
-  /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
-
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
  80006ce:	f107 0328 	add.w	r3, r7, #40	; 0x28
  80006d2:	2200      	movs	r2, #0
@@ -1070,9 +1004,6 @@ static void MX_TIM2_Init(void)
  80006f4:	615a      	str	r2, [r3, #20]
  80006f6:	619a      	str	r2, [r3, #24]
 
-  /* USER CODE BEGIN TIM2_Init 1 */
-
-  /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
  80006f8:	4b2d      	ldr	r3, [pc, #180]	; (80007b0 <MX_TIM2_Init+0xe8>)
  80006fa:	f04f 4280 	mov.w	r2, #1073741824	; 0x40000000
@@ -1175,13 +1106,10 @@ static void MX_TIM2_Init(void)
     Error_Handler();
  800079c:	f000 fbf2 	bl	8000f84 <Error_Handler>
   }
-  /* USER CODE BEGIN TIM2_Init 2 */
 
-  /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
  80007a0:	4803      	ldr	r0, [pc, #12]	; (80007b0 <MX_TIM2_Init+0xe8>)
  80007a2:	f000 fcaf 	bl	8001104 <HAL_TIM_MspPostInit>
-
 }
  80007a6:	bf00      	nop
  80007a8:	3738      	adds	r7, #56	; 0x38
@@ -1322,10 +1250,10 @@ static void MX_GPIO_Init(void)
  800088c:	40010c00 	.word	0x40010c00
 
 08000890 <MAP.0>:
-/* USER CODE END Header_ThrottleInput */
-void ThrottleInput(void *argument)
 
-{  /* USER CODE BEGIN 5 */
+void ThrottleInput(void *argument)
+{
+	// Function used for mapping the pot to the range 0-100
 	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
 		{
  8000890:	b490      	push	{r4, r7}
@@ -1369,7 +1297,7 @@ void ThrottleInput(void *argument)
 	...
 
 080008e0 <ThrottleInput>:
-{  /* USER CODE BEGIN 5 */
+{
  80008e0:	b580      	push	{r7, lr}
  80008e2:	b086      	sub	sp, #24
  80008e4:	af02      	add	r7, sp, #8
@@ -1377,9 +1305,7 @@ void ThrottleInput(void *argument)
 void ThrottleInput(void *argument)
  80008e8:	f107 0318 	add.w	r3, r7, #24
  80008ec:	60fb      	str	r3, [r7, #12]
-	lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
-  /* Infinite loop */
+
   for(;;)
   {
 	  HAL_ADC_PollForConversion(&hadc1,1000);
@@ -1418,11 +1344,7 @@ void ThrottleInput(void *argument)
  8000930:	4b08      	ldr	r3, [pc, #32]	; (8000954 <ThrottleInput+0x74>)
  8000932:	2200      	movs	r2, #0
  8000934:	801a      	strh	r2, [r3, #0]
-	  Lcd_cursor(&lcd, 0,0);
-	  Lcd_string(&lcd, "throttle value");
-	  Lcd_cursor(&lcd, 1,0);
-	  Lcd_int(&lcd,throttleMap);
-*/
+	  }
 	  osMessageQueuePut(ThrottleQueueHandle, &throttleMap,0,200);
  8000936:	4b08      	ldr	r3, [pc, #32]	; (8000958 <ThrottleInput+0x78>)
  8000938:	6818      	ldr	r0, [r3, #0]
@@ -1441,11 +1363,11 @@ void ThrottleInput(void *argument)
  8000958:	20000150 	.word	0x20000150
 
 0800095c <MAP.1>:
-/* USER CODE END Header_BrakeInput */
+
 void BrakeInput(void *argument)
 {
-	 /* USER CODE BEGIN BrakeInput */
-		uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+	// Function used for mapping the pot to the range 0-100
+	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
 		{
  800095c:	b490      	push	{r4, r7}
  800095e:	b084      	sub	sp, #16
@@ -1496,9 +1418,6 @@ void BrakeInput(void *argument)
 void BrakeInput(void *argument)
  80009b4:	f107 0318 	add.w	r3, r7, #24
  80009b8:	60fb      	str	r3, [r7, #12]
-		lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
-	  /* Infinite loop */
 	  for(;;)
 	  {
 		  HAL_ADC_PollForConversion(&hadc2,1000);
@@ -1537,11 +1456,7 @@ void BrakeInput(void *argument)
  80009fc:	4b08      	ldr	r3, [pc, #32]	; (8000a20 <BrakeInput+0x74>)
  80009fe:	2200      	movs	r2, #0
  8000a00:	801a      	strh	r2, [r3, #0]
-		  Lcd_string(&lcd, "brake 2 value");
-		  Lcd_cursor(&lcd, 1,0);
-		  Lcd_int(&lcd,brakeMap);
-*/
-
+		  	  }
 		  osMessageQueuePut(BrakeQueueHandle, &brakeMap,0,200);
  8000a02:	4b08      	ldr	r3, [pc, #32]	; (8000a24 <BrakeInput+0x78>)
  8000a04:	6818      	ldr	r0, [r3, #0]
@@ -1560,19 +1475,15 @@ void BrakeInput(void *argument)
  8000a24:	20000154 	.word	0x20000154
 
 08000a28 <GearSelection>:
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_GearSelection */
+	  }
+}
+
 void GearSelection(void *argument)
 {
  8000a28:	b580      	push	{r7, lr}
  8000a2a:	b082      	sub	sp, #8
  8000a2c:	af00      	add	r7, sp, #0
  8000a2e:	6078      	str	r0, [r7, #4]
-	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
-	  /* Infinite loop */
 	  for(;;)
 	  {
 		  if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_12)) //if bit0 == 1(which is bit4 in DIP) means car is parked
@@ -1588,8 +1499,6 @@ void GearSelection(void *argument)
  8000a42:	2250      	movs	r2, #80	; 0x50
  8000a44:	701a      	strb	r2, [r3, #0]
  8000a46:	e00e      	b.n	8000a66 <GearSelection+0x3e>
-				  /*Lcd_cursor(&lcd, 1,0);
-				  Lcd_string(&lcd, "P");*/
 		 	  }
 		 	  else //car is moving
 		 	  {
@@ -1606,8 +1515,6 @@ void GearSelection(void *argument)
  8000a5a:	2232      	movs	r2, #50	; 0x32
  8000a5c:	701a      	strb	r2, [r3, #0]
  8000a5e:	e002      	b.n	8000a66 <GearSelection+0x3e>
-		 			 /*Lcd_cursor(&lcd, 1,0);
-		 			 Lcd_string(&lcd, "2");*/
 		 		  }
 		 		  else
 		 		  {
@@ -1615,11 +1522,8 @@ void GearSelection(void *argument)
  8000a60:	4b07      	ldr	r3, [pc, #28]	; (8000a80 <GearSelection+0x58>)
  8000a62:	2231      	movs	r2, #49	; 0x31
  8000a64:	701a      	strb	r2, [r3, #0]
-/*
-		  Lcd_cursor(&lcd, 0,0);
-		  Lcd_string(&lcd, "gear value");
-*/
-
+		 		  }
+		 	  }
 		  osMessageQueuePut(GearQueueHandle,&gear,0,250);
  8000a66:	4b07      	ldr	r3, [pc, #28]	; (8000a84 <GearSelection+0x5c>)
  8000a68:	6818      	ldr	r0, [r3, #0]
@@ -1637,10 +1541,10 @@ void GearSelection(void *argument)
  8000a84:	20000158 	.word	0x20000158
 
 08000a88 <MAP.2>:
-*/
-/* USER CODE END Header_DataProcessing */
+
 void DataProcessing(void *argument)
 {
+	// Function used for mapping the throttle and brake percentages to the according speed increase|decrease
 	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
 	{
  8000a88:	b490      	push	{r4, r7}
@@ -1692,10 +1596,8 @@ void DataProcessing(void *argument)
 void DataProcessing(void *argument)
  8000ae0:	f107 0318 	add.w	r3, r7, #24
  8000ae4:	60bb      	str	r3, [r7, #8]
-	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
 
-	  for(;;)
+	for(;;)
 	  {
 		AverageBrakePercentageTotal = 0;
  8000ae6:	4b8c      	ldr	r3, [pc, #560]	; (8000d18 <DataProcessing+0x240>)
@@ -1722,12 +1624,12 @@ void DataProcessing(void *argument)
  8000b06:	4989      	ldr	r1, [pc, #548]	; (8000d2c <DataProcessing+0x254>)
  8000b08:	f003 fa78 	bl	8003ffc <osMessageQueueGet>
 
-		  for (int i = 0; i < 16; i++) //cuantas iteraciones
+		  for (int i = 0; i < 16; i++) //getting 16 values from queue
  8000b0c:	2300      	movs	r3, #0
  8000b0e:	60fb      	str	r3, [r7, #12]
  8000b10:	e01e      	b.n	8000b50 <DataProcessing+0x78>
 		  {
-			  osMessageQueueGet(BrakeQueueHandle,&brakeMapReceived,NULL,250); //get brakequeue
+			  osMessageQueueGet(BrakeQueueHandle,&brakeMapReceived,NULL,250); //get brake
  8000b12:	4b87      	ldr	r3, [pc, #540]	; (8000d30 <DataProcessing+0x258>)
  8000b14:	6818      	ldr	r0, [r3, #0]
  8000b16:	23fa      	movs	r3, #250	; 0xfa
@@ -1757,14 +1659,13 @@ void DataProcessing(void *argument)
  8000b44:	4413      	add	r3, r2
  8000b46:	4a75      	ldr	r2, [pc, #468]	; (8000d1c <DataProcessing+0x244>)
  8000b48:	6013      	str	r3, [r2, #0]
-		  for (int i = 0; i < 16; i++) //cuantas iteraciones
+		  for (int i = 0; i < 16; i++) //getting 16 values from queue
  8000b4a:	68fb      	ldr	r3, [r7, #12]
  8000b4c:	3301      	adds	r3, #1
  8000b4e:	60fb      	str	r3, [r7, #12]
  8000b50:	68fb      	ldr	r3, [r7, #12]
  8000b52:	2b0f      	cmp	r3, #15
  8000b54:	dddd      	ble.n	8000b12 <DataProcessing+0x3a>
-
 		  }
 		  AverageBrakePercentage = AverageBrakePercentageTotal / 16;
  8000b56:	4b70      	ldr	r3, [pc, #448]	; (8000d18 <DataProcessing+0x240>)
@@ -1786,11 +1687,8 @@ void DataProcessing(void *argument)
  8000b74:	461a      	mov	r2, r3
  8000b76:	4b71      	ldr	r3, [pc, #452]	; (8000d3c <DataProcessing+0x264>)
  8000b78:	601a      	str	r2, [r3, #0]
-		  Lcd_cursor(&lcd, 1,0);
-		  Lcd_int(&lcd, AverageThrottlePercentage);
-		  Lcd_string(&lcd, "   ");
-*/
 
+		  //Conditionals according to gear and input
 		  if (gearReceived == 'P' || gearReceived == 'N')
  8000b7a:	4b6c      	ldr	r3, [pc, #432]	; (8000d2c <DataProcessing+0x254>)
  8000b7c:	681b      	ldr	r3, [r3, #0]
@@ -2093,11 +1991,9 @@ void DataProcessing(void *argument)
  8000d8c:	1ad3      	subs	r3, r2, r3
  8000d8e:	4a08      	ldr	r2, [pc, #32]	; (8000db0 <DataProcessing+0x2d8>)
  8000d90:	6013      	str	r3, [r2, #0]
-				  Lcd_string(&lcd, "speed");
-				  Lcd_cursor(&lcd, 1,0);
-		  		  Lcd_int(&lcd, DesiredSpeed);
-		  		  Lcd_string(&lcd, "          ");
-*/
+				  }
+			  }
+		  }
 		  osMessageQueuePut(SpeedQueueHandle,&DesiredSpeed,0,250);
  8000d92:	4b08      	ldr	r3, [pc, #32]	; (8000db4 <DataProcessing+0x2dc>)
  8000d94:	6818      	ldr	r0, [r3, #0]
@@ -2105,7 +2001,6 @@ void DataProcessing(void *argument)
  8000d98:	2200      	movs	r2, #0
  8000d9a:	4905      	ldr	r1, [pc, #20]	; (8000db0 <DataProcessing+0x2d8>)
  8000d9c:	f003 f8ba 	bl	8003f14 <osMessageQueuePut>
-
 		  osDelay(100);
  8000da0:	2064      	movs	r0, #100	; 0x64
  8000da2:	f003 f803 	bl	8003dac <osDelay>
@@ -2117,12 +2012,12 @@ void DataProcessing(void *argument)
  8000db4:	2000015c 	.word	0x2000015c
 
 08000db8 <MAP.3>:
-		  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-		  Lcd_HandleTypeDef lcd;
-		  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+	  Lcd_HandleTypeDef lcd;
+	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
 
-		  uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
-		  	{
+	  // Function used for mapping the speed to the PWM range
+	  uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+		{
  8000db8:	b490      	push	{r4, r7}
  8000dba:	b084      	sub	sp, #16
  8000dbc:	af00      	add	r7, sp, #0
@@ -2139,7 +2034,7 @@ void DataProcessing(void *argument)
  8000dd2:	4613      	mov	r3, r2
  8000dd4:	813b      	strh	r3, [r7, #8]
  8000dd6:	f8c7 c004 	str.w	ip, [r7, #4]
-		  		return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
+			return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
  8000dda:	89fa      	ldrh	r2, [r7, #14]
  8000ddc:	89bb      	ldrh	r3, [r7, #12]
  8000dde:	1ad3      	subs	r3, r2, r3
@@ -2155,7 +2050,7 @@ void DataProcessing(void *argument)
  8000df6:	893b      	ldrh	r3, [r7, #8]
  8000df8:	4413      	add	r3, r2
  8000dfa:	b29b      	uxth	r3, r3
-		  	}
+		}
  8000dfc:	4618      	mov	r0, r3
  8000dfe:	3710      	adds	r7, #16
  8000e00:	46bd      	mov	sp, r7
@@ -2172,17 +2067,17 @@ void DataProcessing(void *argument)
 void OutputDisplay(void *argument)
  8000e10:	f107 0368 	add.w	r3, r7, #104	; 0x68
  8000e14:	623b      	str	r3, [r7, #32]
-		  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+	  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
  8000e16:	4b46      	ldr	r3, [pc, #280]	; (8000f30 <OutputDisplay+0x128>)
  8000e18:	f107 0444 	add.w	r4, r7, #68	; 0x44
  8000e1c:	cb0f      	ldmia	r3, {r0, r1, r2, r3}
  8000e1e:	e884 000f 	stmia.w	r4, {r0, r1, r2, r3}
-		  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
  8000e22:	4a44      	ldr	r2, [pc, #272]	; (8000f34 <OutputDisplay+0x12c>)
  8000e24:	f107 033c 	add.w	r3, r7, #60	; 0x3c
  8000e28:	e892 0003 	ldmia.w	r2, {r0, r1}
  8000e2c:	e883 0003 	stmia.w	r3, {r0, r1}
-		  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
  8000e30:	4638      	mov	r0, r7
  8000e32:	f107 023c 	add.w	r2, r7, #60	; 0x3c
  8000e36:	f107 0144 	add.w	r1, r7, #68	; 0x44
@@ -2326,19 +2221,15 @@ void OutputDisplay(void *argument)
  8000f5c:	200000f4 	.word	0x200000f4
 
 08000f60 <HAL_TIM_PeriodElapsedCallback>:
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
+	  }
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
  8000f60:	b580      	push	{r7, lr}
  8000f62:	b082      	sub	sp, #8
  8000f64:	af00      	add	r7, sp, #0
  8000f66:	6078      	str	r0, [r7, #4]
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1) {
  8000f68:	687b      	ldr	r3, [r7, #4]
  8000f6a:	681b      	ldr	r3, [r3, #0]
@@ -2348,9 +2239,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
  8000f72:	f000 fa01 	bl	8001378 <HAL_IncTick>
   }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
 }
  8000f76:	bf00      	nop
  8000f78:	3708      	adds	r7, #8
@@ -2360,10 +2248,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  8000f80:	40012c00 	.word	0x40012c00
 
 08000f84 <Error_Handler>:
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+
 void Error_Handler(void)
 {
  8000f84:	b480      	push	{r7}
@@ -2377,8 +2262,6 @@ __STATIC_FORCEINLINE void __disable_irq(void)
  8000f88:	b672      	cpsid	i
 }
  8000f8a:	bf00      	nop
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
  8000f8c:	e7fe      	b.n	8000f8c <Error_Handler+0x8>

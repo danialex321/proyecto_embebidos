@@ -1,48 +1,9 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include "lcd.h"
-/* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
-
 TIM_HandleTypeDef htim2;
 
 /* Definitions for Throttle */
@@ -100,11 +61,7 @@ osMessageQueueId_t SpeedQueueHandle;
 const osMessageQueueAttr_t SpeedQueue_attributes = {
   .name = "SpeedQueue"
 };
-/* USER CODE BEGIN PV */
 
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
@@ -116,12 +73,7 @@ void GearSelection(void *argument);
 void DataProcessing(void *argument);
 void OutputDisplay(void *argument);
 
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+// Defining variables
 uint16_t throttle;
 uint16_t brake;
 uint16_t throttleMap;
@@ -142,121 +94,50 @@ int AverageThrottlePercentageTotal = 0;
 int AverageSpeed = 0;
 int AverageSpeedTotal = 0;
 int finalSpeed = 0;
-/* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_TIM2_Init();
-  /* USER CODE BEGIN 2 */
+
+  // Initializing ADC and PWM channel
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
-  /* USER CODE END 2 */
-
-  /* Init scheduler */
   osKernelInitialize();
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
 
   /* Create the queue(s) */
   /* creation of ThrottleQueue */
   ThrottleQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &ThrottleQueue_attributes);
-
   /* creation of BrakeQueue */
   BrakeQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &BrakeQueue_attributes);
-
   /* creation of GearQueue */
   GearQueueHandle = osMessageQueueNew (16, sizeof(char), &GearQueue_attributes);
-
   /* creation of SpeedQueue */
   SpeedQueueHandle = osMessageQueueNew (16, sizeof(uint32_t), &SpeedQueue_attributes);
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
   /* Create the thread(s) */
   /* creation of Throttle */
   ThrottleHandle = osThreadNew(ThrottleInput, NULL, &Throttle_attributes);
-
   /* creation of Brake */
   BrakeHandle = osThreadNew(BrakeInput, NULL, &Brake_attributes);
-
   /* creation of Gear */
   GearHandle = osThreadNew(GearSelection, NULL, &Gear_attributes);
-
   /* creation of Data */
   DataHandle = osThreadNew(DataProcessing, NULL, &Data_attributes);
-
   /* creation of Display */
   DisplayHandle = osThreadNew(OutputDisplay, NULL, &Display_attributes);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
   /* Start scheduler */
   osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
   }
-  /* USER CODE END 3 */
 }
 
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -306,17 +187,7 @@ void SystemClock_Config(void)
   */
 static void MX_ADC1_Init(void)
 {
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
   ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-
   /** Common config
   */
   hadc1.Instance = ADC1;
@@ -340,10 +211,6 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
@@ -353,17 +220,7 @@ static void MX_ADC1_Init(void)
   */
 static void MX_ADC2_Init(void)
 {
-
-  /* USER CODE BEGIN ADC2_Init 0 */
-
-  /* USER CODE END ADC2_Init 0 */
-
   ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC2_Init 1 */
-
-  /* USER CODE END ADC2_Init 1 */
-
   /** Common config
   */
   hadc2.Instance = ADC2;
@@ -387,10 +244,6 @@ static void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN ADC2_Init 2 */
-
-  /* USER CODE END ADC2_Init 2 */
-
 }
 
 /**
@@ -400,18 +253,10 @@ static void MX_ADC2_Init(void)
   */
 static void MX_TIM2_Init(void)
 {
-
-  /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
-
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
-  /* USER CODE BEGIN TIM2_Init 1 */
-
-  /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -445,11 +290,8 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM2_Init 2 */
 
-  /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
-
 }
 
 /**
@@ -494,33 +336,14 @@ static void MX_GPIO_Init(void)
 
 }
 
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_ThrottleInput */
-/**
-  * @brief  Function implementing the Throttle thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_ThrottleInput */
 void ThrottleInput(void *argument)
-
-{  /* USER CODE BEGIN 5 */
+{
+	// Function used for mapping the pot to the range 0-100
 	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
 		{
 		    return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
 		}
 
-	//print on LCD for debugging
-/*
-	Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
-	Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-	Lcd_HandleTypeDef lcd;
-	lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
-  /* Infinite loop */
   for(;;)
   {
 	  HAL_ADC_PollForConversion(&hadc1,1000);
@@ -530,41 +353,18 @@ void ThrottleInput(void *argument)
 	  {
 		  throttleMap = 0;
 	  }
-	  //print on LCD for debugging
-/*
-	  Lcd_cursor(&lcd, 0,0);
-	  Lcd_string(&lcd, "throttle value");
-	  Lcd_cursor(&lcd, 1,0);
-	  Lcd_int(&lcd,throttleMap);
-*/
 	  osMessageQueuePut(ThrottleQueueHandle, &throttleMap,0,200);
     osDelay(10);
   }
-  /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_BrakeInput */
-/**
-* @brief Function implementing the Brake thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_BrakeInput */
 void BrakeInput(void *argument)
 {
-	 /* USER CODE BEGIN BrakeInput */
-		uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+	// Function used for mapping the pot to the range 0-100
+	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
 		{
 		    return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
 		}
-		 //print on LCD for debugging
-/*
-		Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
-		Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-		Lcd_HandleTypeDef lcd;
-		lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
-	  /* Infinite loop */
 	  for(;;)
 	  {
 		  HAL_ADC_PollForConversion(&hadc2,1000);
@@ -574,92 +374,44 @@ void BrakeInput(void *argument)
 		  	  {
 		  		  brakeMap = 0;
 		  	  }
-/*
-		  //print on LCD for debugging
-		  Lcd_cursor(&lcd, 0,0);
-		  Lcd_string(&lcd, "brake 2 value");
-		  Lcd_cursor(&lcd, 1,0);
-		  Lcd_int(&lcd,brakeMap);
-*/
-
 		  osMessageQueuePut(BrakeQueueHandle, &brakeMap,0,200);
 	    osDelay(10);
 	  }
-	  /* USER CODE END BrakeInput */
 }
 
-/* USER CODE BEGIN Header_GearSelection */
-/**
-* @brief Function implementing the Gear thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_GearSelection */
 void GearSelection(void *argument)
 {
-	/* USER CODE BEGIN GearSelection */
-/*
-	Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
-	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-	  Lcd_HandleTypeDef lcd;
-	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
-	  /* Infinite loop */
 	  for(;;)
 	  {
 		  if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_12)) //if bit0 == 1(which is bit4 in DIP) means car is parked
 		 	  {
 		 		  gear = 'P';
-				  /*Lcd_cursor(&lcd, 1,0);
-				  Lcd_string(&lcd, "P");*/
 		 	  }
 		 	  else //car is moving
 		 	  {
 		 		  if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_11)) //bit1 means car is moving
 		 		  {
 		 			  gear = '2';
-		 			 /*Lcd_cursor(&lcd, 1,0);
-		 			 Lcd_string(&lcd, "2");*/
 		 		  }
 		 		  else
 		 		  {
 		 			  gear = '1';
-		 			 /*Lcd_cursor(&lcd, 1,0);
-		 			 Lcd_string(&lcd, "1");*/
 		 		  }
 		 	  }
-/*
-		  Lcd_cursor(&lcd, 0,0);
-		  Lcd_string(&lcd, "gear value");
-*/
-
 		  osMessageQueuePut(GearQueueHandle,&gear,0,250);
 	    osDelay(50);
 	  }
-	  /* USER CODE END GearSelection */
 }
 
-/* USER CODE BEGIN Header_DataProcessing */
-/**
-* @brief Function implementing the Data thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_DataProcessing */
 void DataProcessing(void *argument)
 {
+	// Function used for mapping the throttle and brake percentages to the according speed increase|decrease
 	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
 	{
 		return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
 	}
-/*
-	  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
-	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-	  Lcd_HandleTypeDef lcd;
-	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-*/
 
-	  for(;;)
+	for(;;)
 	  {
 		AverageBrakePercentageTotal = 0;
 		AverageThrottlePercentageTotal = 0;
@@ -668,26 +420,17 @@ void DataProcessing(void *argument)
 
 		osMessageQueueGet(GearQueueHandle,&gearReceived,NULL,250); //get gear
 
-		  for (int i = 0; i < 16; i++) //cuantas iteraciones
+		  for (int i = 0; i < 16; i++) //getting 16 values from queue
 		  {
-			  osMessageQueueGet(BrakeQueueHandle,&brakeMapReceived,NULL,250); //get brakequeue
+			  osMessageQueueGet(BrakeQueueHandle,&brakeMapReceived,NULL,250); //get brake
 			  osMessageQueueGet(ThrottleQueueHandle, &throttleMapReceived,NULL,250); //get throttle
 			  AverageBrakePercentageTotal = AverageBrakePercentageTotal + brakeMapReceived;
 			  AverageThrottlePercentageTotal = AverageThrottlePercentageTotal + throttleMapReceived;
-
 		  }
 		  AverageBrakePercentage = AverageBrakePercentageTotal / 16;
 		  AverageThrottlePercentage = AverageThrottlePercentageTotal / 16;
-/*
- PRINT LCD FOR DEBUGGING AVERAGE VALUES OF BRAKE AND THROTTLE
-		  Lcd_cursor(&lcd, 0,0);
-		  Lcd_int(&lcd, AverageBrakePercentage);
-		  Lcd_string(&lcd, "   ");
-		  Lcd_cursor(&lcd, 1,0);
-		  Lcd_int(&lcd, AverageThrottlePercentage);
-		  Lcd_string(&lcd, "   ");
-*/
 
+		  //Conditionals according to gear and input
 		  if (gearReceived == 'P' || gearReceived == 'N')
 		  {
 			  DesiredSpeed = DesiredSpeed - 400;
@@ -758,40 +501,24 @@ void DataProcessing(void *argument)
 				  }
 			  }
 		  }
-/*
-		  //PRINT LCD FOR DEBUGGING AVERAGE VALUES OF BRAKE AND THROTTLE
-		  	  	  Lcd_cursor(&lcd, 0,0);
-				  Lcd_string(&lcd, "speed");
-				  Lcd_cursor(&lcd, 1,0);
-		  		  Lcd_int(&lcd, DesiredSpeed);
-		  		  Lcd_string(&lcd, "          ");
-*/
 		  osMessageQueuePut(SpeedQueueHandle,&DesiredSpeed,0,250);
-
 		  osDelay(100);
 	  }
-	  /* USER CODE END DataProcessing */
 }
 
-/* USER CODE BEGIN Header_OutputDisplay */
-/**
-* @brief Function implementing the Display thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_OutputDisplay */
 void OutputDisplay(void *argument)
 {
+	  //LCD Ports config
+	  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+	  Lcd_HandleTypeDef lcd;
+	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
 
-		  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
-		  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-		  Lcd_HandleTypeDef lcd;
-		  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-
-		  uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
-		  	{
-		  		return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
-		  	}
+	  // Function used for mapping the speed to the PWM range
+	  uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+		{
+			return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
+		}
 
 	  for(;;)
 	  {
@@ -815,58 +542,25 @@ void OutputDisplay(void *argument)
 
 		  osDelay(500);
 	  }
-	  /* USER CODE END OutputDisplay */
 }
 
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1) {
     HAL_IncTick();
   }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
 }
-#endif /* USE_FULL_ASSERT */
+#endif
