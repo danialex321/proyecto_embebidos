@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -122,7 +122,26 @@ void OutputDisplay(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint16_t throttle;
+uint16_t brake;
+uint16_t throttleMap;
+uint16_t brakeMap;
+char gear = 'N';
 
+int brakeMapReceived = 0;
+int throttleMapReceived = 0;
+int gearReceived = 0;
+int DesiredSpeedReceived = 0;
+
+int DesiredSpeed = 0;
+int MapDesiredSpeed = 0;
+int AverageBrakePercentage = 0;
+int AverageThrottlePercentage = 0;
+int AverageBrakePercentageTotal = 0;
+int AverageThrottlePercentageTotal = 0;
+int AverageSpeed = 0;
+int AverageSpeedTotal = 0;
+int finalSpeed = 0;
 /* USER CODE END 0 */
 
 /**
@@ -157,6 +176,9 @@ int main(void)
   MX_ADC2_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_ADC_Start(&hadc1);
+HAL_ADC_Start(&hadc2);
+HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
 
@@ -186,7 +208,7 @@ int main(void)
   GearQueueHandle = osMessageQueueNew (16, sizeof(char), &GearQueue_attributes);
 
   /* creation of SpeedQueue */
-  SpeedQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &SpeedQueue_attributes);
+  SpeedQueueHandle = osMessageQueueNew (16, sizeof(uint32_t), &SpeedQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -299,7 +321,7 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
@@ -484,11 +506,38 @@ static void MX_GPIO_Init(void)
   */
 /* USER CODE END Header_ThrottleInput */
 void ThrottleInput(void *argument)
-{
-  /* USER CODE BEGIN 5 */
+
+{  /* USER CODE BEGIN 5 */
+	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+		{
+		    return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
+		}
+
+	//print on LCD for debugging
+/*
+	Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+	Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+	Lcd_HandleTypeDef lcd;
+	lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+*/
   /* Infinite loop */
   for(;;)
   {
+	  HAL_ADC_PollForConversion(&hadc1,1000);
+	  throttle = HAL_ADC_GetValue(&hadc1);
+	  throttleMap = MAP(throttle, 0,4020,0,100);
+	  if (throttleMap < 15)
+	  {
+		  throttleMap = 0;
+	  }
+	  //print on LCD for debugging
+/*
+	  Lcd_cursor(&lcd, 0,0);
+	  Lcd_string(&lcd, "throttle value");
+	  Lcd_cursor(&lcd, 1,0);
+	  Lcd_int(&lcd,throttleMap);
+*/
+	  osMessageQueuePut(ThrottleQueueHandle, &throttleMap,0,200);
     osDelay(1);
   }
   /* USER CODE END 5 */
@@ -503,13 +552,40 @@ void ThrottleInput(void *argument)
 /* USER CODE END Header_BrakeInput */
 void BrakeInput(void *argument)
 {
-  /* USER CODE BEGIN BrakeInput */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END BrakeInput */
+	 /* USER CODE BEGIN BrakeInput */
+		uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+		{
+		    return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
+		}
+		 //print on LCD for debugging
+/*
+		Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+		Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+		Lcd_HandleTypeDef lcd;
+		lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+*/
+	  /* Infinite loop */
+	  for(;;)
+	  {
+		  HAL_ADC_PollForConversion(&hadc2,1000);
+		  brake = HAL_ADC_GetValue(&hadc2);
+		  brakeMap = MAP(brake, 0,4020,0,100);
+		  if (brakeMap < 15)
+		  	  {
+		  		  brakeMap = 0;
+		  	  }
+/*
+		  //print on LCD for debugging
+		  Lcd_cursor(&lcd, 0,0);
+		  Lcd_string(&lcd, "brake 2 value");
+		  Lcd_cursor(&lcd, 1,0);
+		  Lcd_int(&lcd,brakeMap);
+*/
+
+		  osMessageQueuePut(BrakeQueueHandle, &brakeMap,0,200);
+	    osDelay(1);
+	  }
+	  /* USER CODE END BrakeInput */
 }
 
 /* USER CODE BEGIN Header_GearSelection */
@@ -521,13 +597,46 @@ void BrakeInput(void *argument)
 /* USER CODE END Header_GearSelection */
 void GearSelection(void *argument)
 {
-  /* USER CODE BEGIN GearSelection */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END GearSelection */
+	/* USER CODE BEGIN GearSelection */
+/*
+	Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+	  Lcd_HandleTypeDef lcd;
+	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+*/
+	  /* Infinite loop */
+	  for(;;)
+	  {
+		  if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_12)) //if bit0 == 1(which is bit4 in DIP) means car is parked
+		 	  {
+		 		  gear = 'P';
+				  /*Lcd_cursor(&lcd, 1,0);
+				  Lcd_string(&lcd, "P");*/
+		 	  }
+		 	  else //car is moving
+		 	  {
+		 		  if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_11)) //bit1 means car is moving
+		 		  {
+		 			  gear = '2';
+		 			 /*Lcd_cursor(&lcd, 1,0);
+		 			 Lcd_string(&lcd, "2");*/
+		 		  }
+		 		  else
+		 		  {
+		 			  gear = '1';
+		 			 /*Lcd_cursor(&lcd, 1,0);
+		 			 Lcd_string(&lcd, "1");*/
+		 		  }
+		 	  }
+/*
+		  Lcd_cursor(&lcd, 0,0);
+		  Lcd_string(&lcd, "gear value");
+*/
+
+		  osMessageQueuePut(GearQueueHandle,&gear,0,250);
+	    osDelay(1);
+	  }
+	  /* USER CODE END GearSelection */
 }
 
 /* USER CODE BEGIN Header_DataProcessing */
@@ -539,13 +648,129 @@ void GearSelection(void *argument)
 /* USER CODE END Header_DataProcessing */
 void DataProcessing(void *argument)
 {
-  /* USER CODE BEGIN DataProcessing */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END DataProcessing */
+	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+	{
+		return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
+	}
+/*
+	  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+	  Lcd_HandleTypeDef lcd;
+	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+*/
+
+	  for(;;)
+	  {
+		AverageBrakePercentageTotal = 0;
+		AverageThrottlePercentageTotal = 0;
+		brakeMapReceived = 0;
+		throttleMapReceived = 0;
+
+		osMessageQueueGet(GearQueueHandle,&gearReceived,NULL,250); //get gear
+
+		  for (int i = 0; i < 16; i++) //cuantas iteraciones
+		  {
+			  osMessageQueueGet(BrakeQueueHandle,&brakeMapReceived,NULL,250); //get brakequeue
+			  osMessageQueueGet(ThrottleQueueHandle, &throttleMapReceived,NULL,250); //get throttle
+			  AverageBrakePercentageTotal = AverageBrakePercentageTotal + brakeMapReceived;
+			  AverageThrottlePercentageTotal = AverageThrottlePercentageTotal + throttleMapReceived;
+
+		  }
+		  AverageBrakePercentage = AverageBrakePercentageTotal / 16;
+		  AverageThrottlePercentage = AverageThrottlePercentageTotal / 16;
+/*
+ PRINT LCD FOR DEBUGGING AVERAGE VALUES OF BRAKE AND THROTTLE
+		  Lcd_cursor(&lcd, 0,0);
+		  Lcd_int(&lcd, AverageBrakePercentage);
+		  Lcd_string(&lcd, "   ");
+		  Lcd_cursor(&lcd, 1,0);
+		  Lcd_int(&lcd, AverageThrottlePercentage);
+		  Lcd_string(&lcd, "   ");
+*/
+
+		  if (gearReceived == 'P' || gearReceived == 'N')
+		  {
+			  DesiredSpeed = DesiredSpeed - 400;
+			  if (DesiredSpeed <= 0)
+			  {
+				  DesiredSpeed = 0;
+			  }
+		  }
+		  else if (gearReceived == '1')
+		  {
+			  if (DesiredSpeed >= 80000)
+			  {
+				  DesiredSpeed = 80000;
+			  }
+
+			  if(AverageBrakePercentage > 0 && AverageThrottlePercentage > 0)
+			  {
+				  DesiredSpeed = DesiredSpeed;
+
+			  }
+			  //ACCELERATION
+			  else if(AverageBrakePercentage <= 0 && AverageThrottlePercentage > 0)
+			  {
+					  MapDesiredSpeed = MAP(AverageThrottlePercentage, 0, 100, 0, 1600);
+					  DesiredSpeed = DesiredSpeed + MapDesiredSpeed;
+			  }
+			  //BRAKING
+			  else if(AverageBrakePercentage > 0 && AverageThrottlePercentage <= 0)
+			  {
+				  if (DesiredSpeed <= 0)
+				  {
+					  DesiredSpeed = 0;
+				  }
+				  else if (AverageBrakePercentage > 0)
+				  {
+					  MapDesiredSpeed = MAP(AverageBrakePercentage, 0, 100, 0, 3200);
+					  DesiredSpeed = DesiredSpeed - MapDesiredSpeed;
+				  }
+			  }
+		  }
+		  else if (gearReceived == '2')
+		  {
+			  if (DesiredSpeed >= 200000)
+			  {
+				  DesiredSpeed = 200000;
+			  }
+
+			  if(AverageBrakePercentage > 0 && AverageThrottlePercentage > 0)
+			  {
+				  DesiredSpeed = DesiredSpeed;
+			  }
+			  else if(AverageBrakePercentage <= 0 && AverageThrottlePercentage > 0)
+			  {
+				  MapDesiredSpeed = MAP(AverageThrottlePercentage, 0, 100, 0, 3200);
+				  DesiredSpeed = DesiredSpeed + MapDesiredSpeed;
+			  }
+			  //BRAKING
+			  else if(AverageBrakePercentage > 0 && AverageThrottlePercentage <= 0)
+			  {
+				  if (DesiredSpeed <= 0)
+				  {
+					  DesiredSpeed = 0;
+				  }
+				  else if (AverageBrakePercentage > 0)
+				  {
+					  MapDesiredSpeed = MAP(AverageBrakePercentage, 0, 100, 0, 3200);
+					  DesiredSpeed = DesiredSpeed - MapDesiredSpeed;
+				  }
+			  }
+		  }
+/*
+		  //PRINT LCD FOR DEBUGGING AVERAGE VALUES OF BRAKE AND THROTTLE
+		  	  	  Lcd_cursor(&lcd, 0,0);
+				  Lcd_string(&lcd, "speed");
+				  Lcd_cursor(&lcd, 1,0);
+		  		  Lcd_int(&lcd, DesiredSpeed);
+		  		  Lcd_string(&lcd, "          ");
+*/
+		  osMessageQueuePut(SpeedQueueHandle,&DesiredSpeed,0,250);
+
+		  osDelay(1);
+	  }
+	  /* USER CODE END DataProcessing */
 }
 
 /* USER CODE BEGIN Header_OutputDisplay */
@@ -557,13 +782,34 @@ void DataProcessing(void *argument)
 /* USER CODE END Header_OutputDisplay */
 void OutputDisplay(void *argument)
 {
-  /* USER CODE BEGIN OutputDisplay */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END OutputDisplay */
+
+		  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
+		  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
+		  Lcd_HandleTypeDef lcd;
+		  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
+
+	  for(;;)
+	  {
+		  AverageSpeedTotal = 0;
+		  for (int i = 0; i < 16; i++)
+		  {
+			  osMessageQueueGet(SpeedQueueHandle,&DesiredSpeedReceived,NULL,250);
+			  AverageSpeedTotal = AverageSpeedTotal + DesiredSpeedReceived;
+
+		  }
+		  AverageSpeed = AverageSpeedTotal / 16;
+		  finalSpeed = AverageSpeed / 1000;
+
+		  Lcd_cursor(&lcd, 0,0);
+		  Lcd_string(&lcd, "final speed ");
+		  Lcd_cursor(&lcd, 1,0);
+		  Lcd_int(&lcd,finalSpeed);
+		  Lcd_string(&lcd, "          ");
+
+
+		  osDelay(1);
+	  }
+	  /* USER CODE END OutputDisplay */
 }
 
 /**

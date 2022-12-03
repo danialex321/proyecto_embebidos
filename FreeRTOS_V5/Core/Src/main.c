@@ -200,16 +200,16 @@ int main(void)
 
   /* Create the queue(s) */
   /* creation of ThrottleQueue */
-  ThrottleQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &ThrottleQueue_attributes);
+  ThrottleQueueHandle = osMessageQueueNew (32, sizeof(uint32_t), &ThrottleQueue_attributes);
 
   /* creation of BrakeQueue */
-  BrakeQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &BrakeQueue_attributes);
+  BrakeQueueHandle = osMessageQueueNew (32, sizeof(uint32_t), &BrakeQueue_attributes);
 
   /* creation of GearQueue */
   GearQueueHandle = osMessageQueueNew (16, sizeof(char), &GearQueue_attributes);
 
   /* creation of SpeedQueue */
-  SpeedQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &SpeedQueue_attributes);
+  SpeedQueueHandle = osMessageQueueNew (32, sizeof(uint32_t), &SpeedQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -602,102 +602,13 @@ void GearSelection(void *argument)
 /* USER CODE END Header_DataProcessing */
 void DataProcessing(void *argument)
 {
-	uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
-	{
-	    return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
-	}
-
-	  for(;;)
-	  {
-
-		  osMessageQueueGet(GearQueueHandle,&gearReceived,NULL,250); //get gear
-
-		  for (int i = 0; i < 16; i++) //cuantas iteraciones
-		  {
-			  osMessageQueueGet(BrakeQueueHandle,&brakeMapReceived,NULL,250); //get brakequeue
-			  osMessageQueueGet(ThrottleQueueHandle, &throttleMapReceived,NULL,250); //get throttle
-			  AverageBrakePercentageTotal = AverageBrakePercentageTotal + brakeMapReceived;
-			  AverageThrottlePercentageTotal = AverageThrottlePercentageTotal + throttleMapReceived;
-
-		  }
-		  AverageBrakePercentage = AverageBrakePercentageTotal / 16;
-		  AverageThrottlePercentage = AverageThrottlePercentageTotal / 16;
-
-		  if (gearReceived == 'P' || gearReceived == 'N')
-		  {
-			  DesiredSpeed = DesiredSpeed - 400;
-			  if (DesiredSpeed <= 0)
-			  {
-				  DesiredSpeed = 0;
-			  }
-		  }
-		  else if (gearReceived == '1')
-		  {
-			  if (DesiredSpeed >= 80000)
-			  {
-				  DesiredSpeed = 80000;
-			  }
-
-			  if(AverageBrakePercentage > 0 && AverageThrottlePercentage > 0)
-			  {
-				  DesiredSpeed = DesiredSpeed;
-
-			  }
-			  //ACCELERATION
-			  else if(AverageBrakePercentage <= 0 && AverageThrottlePercentage > 0)
-			  {
-				  	  MapDesiredSpeed = MAP(AverageThrottlePercentage, 0, 100, 0, 1600);
-				  	  DesiredSpeed = DesiredSpeed + MapDesiredSpeed;
-			  }
-			  //BRAKING
-			  else if(AverageBrakePercentage > 0 && AverageThrottlePercentage <= 0)
-			  {
-				  if (DesiredSpeed <= 0)
-				  {
-					  DesiredSpeed = 0;
-				  }
-				  else if (AverageBrakePercentage > 0)
-				  {
-					  MapDesiredSpeed = MAP(AverageBrakePercentage, 0, 100, 0, 3200);
-					  DesiredSpeed = DesiredSpeed - MapDesiredSpeed;
-				  }
-			  }
-		  }
-		  else if (gearReceived == '2')
-		  {
-			  if (DesiredSpeed >= 200000)
-			  {
-				  DesiredSpeed = 200000;
-			  }
-
-			  if(AverageBrakePercentage > 0 && AverageThrottlePercentage > 0)
-			  {
-				  DesiredSpeed = DesiredSpeed;
-			  }
-			  else if(AverageBrakePercentage <= 0 && AverageThrottlePercentage < 0)
-			  {
-				  MapDesiredSpeed = MAP(AverageThrottlePercentage, 0, 100, 0, 3200);
-				  DesiredSpeed = DesiredSpeed + MapDesiredSpeed;
-			  }
-			  //BRAKING
-			  else if(AverageBrakePercentage > 0 && AverageThrottlePercentage <= 0)
-			  {
-				  if (DesiredSpeed <= 0)
-				  {
-					  DesiredSpeed = 0;
-				  }
-				  else if (AverageBrakePercentage > 0)
-				  {
-					  MapDesiredSpeed = MAP(AverageBrakePercentage, 0, 100, 0, 3200);
-					  DesiredSpeed = DesiredSpeed - MapDesiredSpeed;
-				  }
-			  }
-		  }
-		  osMessageQueuePut(SpeedQueueHandle,&DesiredSpeed,0,250);
-
-		  osDelay(1);
-	  }
-	  /* USER CODE END DataProcessing */
+  /* USER CODE BEGIN DataProcessing */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END DataProcessing */
 }
 
 /* USER CODE BEGIN Header_OutputDisplay */
@@ -709,34 +620,13 @@ void DataProcessing(void *argument)
 /* USER CODE END Header_OutputDisplay */
 void OutputDisplay(void *argument)
 {
-	  // Lcd_PortType ports[] = { D4_GPIO_Port, D5_GPIO_Port, D6_GPIO_Port, D7_GPIO_Port };
-	  Lcd_PortType ports[] = { GPIOB, GPIOB, GPIOB, GPIOB };
-	  // Lcd_PinType pins[] = {D4_Pin, D5_Pin, D6_Pin, D7_Pin};
-	  Lcd_PinType pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11};
-	  Lcd_HandleTypeDef lcd;
-	  // Lcd_create(ports, pins, RS_GPIO_Port, RS_Pin, EN_GPIO_Port, EN_Pin, LCD_4_BIT_MODE);
-	  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
-
+  /* USER CODE BEGIN OutputDisplay */
+  /* Infinite loop */
   for(;;)
   {
-	  for (int i = 0; i < 16; i++) //cuantas iteraciones
-	  		  {
-		  	  	  osMessageQueueGet(SpeedQueueHandle,&DesiredSpeedReceived,NULL,250);
-	  			  AverageSpeedTotal = AverageSpeedTotal + DesiredSpeedReceived;
-
-	  		  }
-	  	  	  AverageSpeed = AverageSpeedTotal / 16;
-	  	  	  AverageSpeed = AverageSpeed / 1000;
-
-	  Lcd_cursor(&lcd, 0,0);
-	  Lcd_string(&lcd, "speed value");
-	  Lcd_cursor(&lcd, 1,0);
-	  Lcd_int(&lcd,AverageSpeed);
-
-	  osDelay(1);
+    osDelay(1);
   }
   /* USER CODE END OutputDisplay */
-
 }
 
 /**
