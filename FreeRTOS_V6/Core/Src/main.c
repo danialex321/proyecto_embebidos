@@ -177,8 +177,8 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
-HAL_ADC_Start(&hadc2);
-HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_ADC_Start(&hadc2);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
 
@@ -788,6 +788,11 @@ void OutputDisplay(void *argument)
 		  Lcd_HandleTypeDef lcd;
 		  lcd = Lcd_create(ports, pins, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_3, LCD_4_BIT_MODE);
 
+		  uint16_t MAP(uint16_t au32_IN, uint16_t au32_INmin, uint16_t au32_INmax, uint16_t au32_OUTmin, uint16_t au32_OUTmax)
+		  	{
+		  		return ((((au32_IN - au32_INmin)*(au32_OUTmax - au32_OUTmin))/(au32_INmax - au32_INmin)) + au32_OUTmin);
+		  	}
+
 	  for(;;)
 	  {
 		  AverageSpeedTotal = 0;
@@ -806,6 +811,7 @@ void OutputDisplay(void *argument)
 		  Lcd_int(&lcd,finalSpeed);
 		  Lcd_string(&lcd, "          ");
 
+		  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1, MAP(finalSpeed,0,220,0,65535));
 
 		  osDelay(1);
 	  }
