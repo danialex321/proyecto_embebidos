@@ -1430,8 +1430,8 @@ void ThrottleInput(void *argument)
  800093c:	2200      	movs	r2, #0
  800093e:	4905      	ldr	r1, [pc, #20]	; (8000954 <ThrottleInput+0x74>)
  8000940:	f003 fae8 	bl	8003f14 <osMessageQueuePut>
-    osDelay(1);
- 8000944:	2001      	movs	r0, #1
+    osDelay(10);
+ 8000944:	200a      	movs	r0, #10
  8000946:	f003 fa31 	bl	8003dac <osDelay>
 	  HAL_ADC_PollForConversion(&hadc1,1000);
  800094a:	e7d0      	b.n	80008ee <ThrottleInput+0xe>
@@ -1549,8 +1549,8 @@ void BrakeInput(void *argument)
  8000a08:	2200      	movs	r2, #0
  8000a0a:	4905      	ldr	r1, [pc, #20]	; (8000a20 <BrakeInput+0x74>)
  8000a0c:	f003 fa82 	bl	8003f14 <osMessageQueuePut>
-	    osDelay(1);
- 8000a10:	2001      	movs	r0, #1
+	    osDelay(10);
+ 8000a10:	200a      	movs	r0, #10
  8000a12:	f003 f9cb 	bl	8003dac <osDelay>
 		  HAL_ADC_PollForConversion(&hadc2,1000);
  8000a16:	e7d0      	b.n	80009ba <BrakeInput+0xe>
@@ -1627,8 +1627,8 @@ void GearSelection(void *argument)
  8000a6c:	2200      	movs	r2, #0
  8000a6e:	4904      	ldr	r1, [pc, #16]	; (8000a80 <GearSelection+0x58>)
  8000a70:	f003 fa50 	bl	8003f14 <osMessageQueuePut>
-	    osDelay(1);
- 8000a74:	2001      	movs	r0, #1
+	    osDelay(50);
+ 8000a74:	2032      	movs	r0, #50	; 0x32
  8000a76:	f003 f999 	bl	8003dac <osDelay>
 		  if (HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_12)) //if bit0 == 1(which is bit4 in DIP) means car is parked
  8000a7a:	e7d9      	b.n	8000a30 <GearSelection+0x8>
@@ -2106,8 +2106,8 @@ void DataProcessing(void *argument)
  8000d9a:	4905      	ldr	r1, [pc, #20]	; (8000db0 <DataProcessing+0x2d8>)
  8000d9c:	f003 f8ba 	bl	8003f14 <osMessageQueuePut>
 
-		  osDelay(1);
- 8000da0:	2001      	movs	r0, #1
+		  osDelay(100);
+ 8000da0:	2064      	movs	r0, #100	; 0x64
  8000da2:	f003 f803 	bl	8003dac <osDelay>
 		AverageBrakePercentageTotal = 0;
  8000da6:	e69e      	b.n	8000ae6 <DataProcessing+0xe>
@@ -2307,12 +2307,11 @@ void OutputDisplay(void *argument)
  8000f22:	681b      	ldr	r3, [r3, #0]
  8000f24:	635a      	str	r2, [r3, #52]	; 0x34
 
-		  osDelay(1);
- 8000f26:	2001      	movs	r0, #1
- 8000f28:	f002 ff40 	bl	8003dac <osDelay>
+		  osDelay(500);
+ 8000f26:	f44f 70fa 	mov.w	r0, #500	; 0x1f4
+ 8000f2a:	f002 ff3f 	bl	8003dac <osDelay>
 		  AverageSpeedTotal = 0;
- 8000f2c:	e799      	b.n	8000e62 <OutputDisplay+0x5a>
- 8000f2e:	bf00      	nop
+ 8000f2e:	e798      	b.n	8000e62 <OutputDisplay+0x5a>
  8000f30:	0800737c 	.word	0x0800737c
  8000f34:	0800738c 	.word	0x0800738c
  8000f38:	40010800 	.word	0x40010800

@@ -538,7 +538,7 @@ void ThrottleInput(void *argument)
 	  Lcd_int(&lcd,throttleMap);
 */
 	  osMessageQueuePut(ThrottleQueueHandle, &throttleMap,0,200);
-    osDelay(1);
+    osDelay(10);
   }
   /* USER CODE END 5 */
 }
@@ -583,7 +583,7 @@ void BrakeInput(void *argument)
 */
 
 		  osMessageQueuePut(BrakeQueueHandle, &brakeMap,0,200);
-	    osDelay(1);
+	    osDelay(10);
 	  }
 	  /* USER CODE END BrakeInput */
 }
@@ -634,7 +634,7 @@ void GearSelection(void *argument)
 */
 
 		  osMessageQueuePut(GearQueueHandle,&gear,0,250);
-	    osDelay(1);
+	    osDelay(50);
 	  }
 	  /* USER CODE END GearSelection */
 }
@@ -768,7 +768,7 @@ void DataProcessing(void *argument)
 */
 		  osMessageQueuePut(SpeedQueueHandle,&DesiredSpeed,0,250);
 
-		  osDelay(1);
+		  osDelay(100);
 	  }
 	  /* USER CODE END DataProcessing */
 }
@@ -813,7 +813,7 @@ void OutputDisplay(void *argument)
 
 		  __HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1, MAP(finalSpeed,0,220,0,65535));
 
-		  osDelay(1);
+		  osDelay(500);
 	  }
 	  /* USER CODE END OutputDisplay */
 }
