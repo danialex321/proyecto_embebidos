@@ -1,0 +1,13 @@
+../Core/Src/main.c:134:5:main	8	static
+../Core/Src/main.c:243:6:SystemClock_Config	88	static
+../Core/Src/main.c:290:13:MX_ADC1_Init	24	static
+../Core/Src/main.c:337:13:MX_ADC2_Init	24	static
+../Core/Src/main.c:384:13:MX_TIM2_Init	64	static
+../Core/Src/main.c:443:13:MX_GPIO_Init	40	static
+../Core/Src/main.c:491:6:ThrottleInput	16	static
+../Core/Src/main.c:509:6:BreakInput	16	static
+../Core/Src/main.c:527:6:GearInput	16	static
+../Core/Src/main.c:545:6:DataInput	24	static
+../Core/Src/main.c:575:6:DisplayInput	112	static
+../Core/Src/main.c:619:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/main.c:636:6:Error_Handler	4	static,ignoring_inline_asm

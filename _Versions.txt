@@ -1,5 +1,0 @@
-FreeRTOS_...
-
-config -> base program with FreeRTOS basic configuration
-
-PWM_V1 -> basic test of blinking LED in different brightness
